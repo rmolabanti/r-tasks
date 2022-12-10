@@ -13,11 +13,13 @@ class AuthService {
         builder: (BuildContext context, snapshot) {
           if (snapshot.hasData) {
             print('User is signed in!');
-            return const TasksHome();
-          } else {
-            print('User is currently signed out!');
-            return const LoginPage();
+            User? user = snapshot.data;
+            if(user!=null){
+              return TasksHome(user:user);
+            }
           }
+          print('User is currently signed out!');
+          return const LoginPage();
         });
   }
 

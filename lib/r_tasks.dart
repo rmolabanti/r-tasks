@@ -1,19 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:r_tasks/task.dart';
+import 'package:r_tasks/tasks_dao.dart';
 
-Future<void> main() async {
-  runApp(const TasksHome());
-}
-
-class Task {
-  Task({required this.name});
-  String name;
-  bool isDone=false;
-}
+// Future<void> main() async {
+//   runApp(const TasksHome());
+// }
 
 class TasksHome extends StatelessWidget {
-  const TasksHome({super.key});
+  final User user;
+
+  const TasksHome({super.key, required this.user});
 
   // This widget is the root of your application.
   @override
@@ -25,61 +22,101 @@ class TasksHome extends StatelessWidget {
       ),
       home: TasksPage(
         title: 'R Tasks',
-        tasks: [Task(name: "Task1"), Task(name: "Task2")],
+        uid: user.uid,
+        tasks: [],
       ),
     );
   }
 }
 
 class TasksPage extends StatefulWidget {
-  const TasksPage({super.key, required this.title, required this.tasks});
+  final String uid;
   final String title;
   final List<Task> tasks;
+
+  const TasksPage(
+      {super.key, required this.title, required this.uid, required this.tasks});
 
   @override
   State<TasksPage> createState() => _TasksPageState();
 }
 
 class _TasksPageState extends State<TasksPage> {
+  final TasksDao dao = TasksDao();
+  late Future<List<Task>> tasksFuture;
 
   void _handleTaskChange(Task task) {
     setState(() {
-      task.isDone=!task.isDone;
+      task.isDone = !task.isDone;
     });
   }
 
-  void _handleNewTask(Task task) {
+  void _handleNewTask({required String name}) {
     setState(() {
+      var task = Task(uid: widget.uid, name: name);
       widget.tasks.add(task);
+      dao.addTask(task);
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        children: widget.tasks.map((task) {
-          return TaskItem(task:task,onTaskChanged: _handleTaskChange,);
-        }).toList(),
+  void initState() {
+    super.initState();
+    tasksFuture = dao.getAll();
+  }
 
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm(onTaskAdded:_handleNewTask)));
+  @override
+  Widget build(BuildContext context) {
+
+    getView(List<Task> tasks) {
+      tasks.forEach((task) {
+        if(!widget.tasks.contains(task)){
+          widget.tasks.add(task);
+        }
+      });
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          children: widget.tasks.map((task) {
+            return TaskItem(
+              task: task,
+              onTaskChanged: _handleTaskChange,
+            );
+          }).toList(),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) =>
+                    AddTaskForm(onTaskAdded: _handleNewTask)));
+          },
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ), // This trailing comma makes auto-formatting nicer for build methods.
+      );
+    }
+
+    return FutureBuilder(
+        future: tasksFuture,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return getView(snapshot.data!);
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else {
+            return CircularProgressIndicator();
+          }
         },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
 
 class TaskItem extends StatelessWidget {
-  TaskItem({required this.task,required this.onTaskChanged}) : super(key: ObjectKey(task));
+  TaskItem({required this.task, required this.onTaskChanged})
+      : super(key: ObjectKey(task));
 
   final Task task;
   final void Function(Task) onTaskChanged;
@@ -87,9 +124,12 @@ class TaskItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onTap: (){onTaskChanged(task);},
+      onTap: () {
+        onTaskChanged(task);
+      },
       leading: CircleAvatar(
-        backgroundColor: task.isDone?Colors.black54:Theme.of(context).primaryColor,
+        backgroundColor:
+            task.isDone ? Colors.black54 : Theme.of(context).primaryColor,
         child: Text(task.name[0]),
       ),
       title: Text(
@@ -100,7 +140,7 @@ class TaskItem extends StatelessWidget {
   }
 
   TextStyle? _getTextStyle(BuildContext context) {
-    if(!task.isDone) return null;
+    if (!task.isDone) return null;
     return const TextStyle(
       color: Colors.black54,
       decoration: TextDecoration.lineThrough,
@@ -108,9 +148,10 @@ class TaskItem extends StatelessWidget {
   }
 }
 
-class AddTaskForm extends StatefulWidget{
+class AddTaskForm extends StatefulWidget {
+  final void Function({required String name}) onTaskAdded;
+
   const AddTaskForm({super.key, required this.onTaskAdded});
-  final void Function(Task) onTaskAdded;
 
   @override
   State<StatefulWidget> createState() => AddTaskFormState();
@@ -118,7 +159,6 @@ class AddTaskForm extends StatefulWidget{
 
 class AddTaskFormState extends State<AddTaskForm> {
   final _formKey = GlobalKey<FormState>();
-
   final addTaskController = TextEditingController();
 
   @override
@@ -126,6 +166,7 @@ class AddTaskFormState extends State<AddTaskForm> {
     addTaskController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,15 +194,15 @@ class AddTaskFormState extends State<AddTaskForm> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(addTaskController.text)),
                             );
-                            widget.onTaskAdded(Task(name: addTaskController.text));
+                            widget.onTaskAdded(name: addTaskController.text);
                             Navigator.of(context).pop();
                           }
                         },
                         child: const Text("Add")),
                   ),
                 ),
-          ],
-        )),
+              ],
+            )),
       ),
     );
   }
