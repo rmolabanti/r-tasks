@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
+
+import 'add_task_form.dart';
 
 // Future<void> main() async {
 //   runApp(const TasksHome());
@@ -47,33 +50,34 @@ class _TasksPageState extends State<TasksPage> {
 
   void _handleTaskChange(Task task) {
     setState(() {
-      task.isDone = !task.isDone;
+      dao.updateTask(task);
     });
   }
 
   void _handleNewTask({required String name}) {
-    setState(() {
-      var task = Task(uid: widget.uid, name: name);
-      widget.tasks.add(task);
-      dao.addTask(task);
-    });
+    var task = Task(uid: widget.uid, name: name);
+    dao.addTask(task).then((updatedTask) => setState(() {
+          widget.tasks.add(updatedTask);
+        }));
   }
 
   @override
   void initState() {
     super.initState();
-    tasksFuture = dao.getAll();
+    tasksFuture = dao.getAll(widget.uid);
   }
 
   @override
   Widget build(BuildContext context) {
 
     getView(List<Task> tasks) {
-      tasks.forEach((task) {
+
+      for(var task in tasks){
         if(!widget.tasks.contains(task)){
           widget.tasks.add(task);
         }
-      });
+      }
+
       return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
@@ -125,16 +129,52 @@ class TaskItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: () {
+        task.isDone=!task.isDone;
         onTaskChanged(task);
       },
       leading: CircleAvatar(
         backgroundColor:
-            task.isDone ? Colors.black54 : Theme.of(context).primaryColor,
-        child: Text(task.name[0]),
+            task.isDone ? Theme.of(context).primaryColorLight : Colors.orange,
+        child: Text(task.rank.toString()),
       ),
       title: Text(
         task.name,
         style: _getTextStyle(context),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.exposure_plus_1_rounded),
+            iconSize: 35,
+            color: task.isDone ? Theme.of(context).disabledColor : Colors.green,
+            onPressed: () {
+              if(!task.isDone){
+                task.rank=task.rank+1;
+                onTaskChanged(task);
+              }
+            },
+          ),
+           IconButton(
+            icon: const Icon(Icons.exposure_minus_1_rounded),
+             iconSize: 35,
+             color: task.isDone ? Theme.of(context).disabledColor : Colors.red,
+            onPressed: () {
+              if(!task.isDone) {
+                task.rank = task.rank - 1;
+                onTaskChanged(task);
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy_rounded),
+            iconSize: 35,
+            color: task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColor,
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: task.name));
+            },
+          ),
+        ],
       ),
     );
   }
@@ -144,66 +184,6 @@ class TaskItem extends StatelessWidget {
     return const TextStyle(
       color: Colors.black54,
       decoration: TextDecoration.lineThrough,
-    );
-  }
-}
-
-class AddTaskForm extends StatefulWidget {
-  final void Function({required String name}) onTaskAdded;
-
-  const AddTaskForm({super.key, required this.onTaskAdded});
-
-  @override
-  State<StatefulWidget> createState() => AddTaskFormState();
-}
-
-class AddTaskFormState extends State<AddTaskForm> {
-  final _formKey = GlobalKey<FormState>();
-  final addTaskController = TextEditingController();
-
-  @override
-  void dispose() {
-    addTaskController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Add Task")),
-      body: Center(
-        child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                TextFormField(
-                  controller: addTaskController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(addTaskController.text)),
-                            );
-                            widget.onTaskAdded(name: addTaskController.text);
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: const Text("Add")),
-                  ),
-                ),
-              ],
-            )),
-      ),
     );
   }
 }
