@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:r_tasks/auth_service.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
 
@@ -24,7 +25,7 @@ class TasksHome extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
       ),
       home: TasksPage(
-        title: 'R Tasks',
+        title: '${user.displayName??'R'} Tasks',
         uid: user.uid,
         tasks: [],
       ),
@@ -81,6 +82,16 @@ class _TasksPageState extends State<TasksPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
+          actions: [
+              IconButton(
+                icon: const Icon(Icons.logout_rounded),
+                iconSize: 35,
+                color: Theme.of(context).scaffoldBackgroundColor,
+                onPressed: () {
+                  AuthService().signOut();
+                },
+              ),
+            ],
         ),
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
