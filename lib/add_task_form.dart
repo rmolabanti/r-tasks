@@ -28,14 +28,18 @@ class AddTaskFormState extends State<AddTaskForm> {
             key: _formKey,
             child: ListView(
               children: [
-                TextFormField(
-                  controller: addTaskController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: TextFormField(
+                    autofocus:true,
+                    controller: addTaskController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter some text';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
                 Center(
                   child: Padding(
@@ -50,7 +54,8 @@ class AddTaskFormState extends State<AddTaskForm> {
                             Navigator.of(context).pop();
                           }
                         },
-                        child: const Text("Add")),
+                        child: const Text("Add"),
+                    ),
                   ),
                 ),
               ],
