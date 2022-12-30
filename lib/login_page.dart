@@ -19,7 +19,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("R Tasks"),
+        title: const Text("RM Tasks"),
         backgroundColor: Colors.green,
       ),
       body: Container(
