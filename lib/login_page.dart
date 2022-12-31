@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,7 +17,9 @@ class _LoginPageState extends State<LoginPage> {
   _launchURL() async {
     const url = 'https://www.raghumolabanti.com/privacy-policy';
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    if(kIsWeb){
+      await launchUrl(uri,webOnlyWindowName:  '_blank',);
+    } else if(await canLaunchUrl(uri)){
       await launchUrl(uri);
     } else {
       throw 'Could not launch $url';
