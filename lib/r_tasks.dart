@@ -145,8 +145,8 @@ class TaskItem extends StatelessWidget {
       },
       leading: CircleAvatar(
         backgroundColor:
-            task.isDone ? Theme.of(context).primaryColorLight : Colors.blue,
-        child: Text(task.rank.toString()),
+            task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColorDark,
+        child: Text(task.rank.toString(),style: const TextStyle(color: Colors.black)),
       ),
       title: Text(
         task.name,
