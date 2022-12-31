@@ -1,33 +1,33 @@
 {
-    "name": "r_tasks",
-    "short_name": "r_tasks",
+    "name": "RM Tasks",
+    "short_name": "RM Tasks",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "theme_color": "#ff914d",
+    "description": "RM Tasks",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
+            "src": "icons/ms-icon-144x144.png",
+            "sizes": "144x144",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "icons/rm_icon_512_512.png",
             "sizes": "512x512",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
+            "src": "icons/ms-icon-150x150.png",
+            "sizes": "150x150",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
+            "src": "icons/ms-icon-310x310.png",
+            "sizes": "310x310",
             "type": "image/png",
             "purpose": "maskable"
         }
