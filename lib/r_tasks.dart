@@ -20,12 +20,12 @@ class TasksHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'R Tasks',
+      title: 'RM Tasks',
       theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
+        primarySwatch: Colors.orange,
       ),
       home: TasksPage(
-        title: '${user.displayName??'R'} Tasks',
+        title: '${user.displayName??'RM'} Tasks',
         uid: user.uid,
         tasks: [],
       ),
@@ -145,7 +145,7 @@ class TaskItem extends StatelessWidget {
       },
       leading: CircleAvatar(
         backgroundColor:
-            task.isDone ? Theme.of(context).primaryColorLight : Colors.orange,
+            task.isDone ? Theme.of(context).primaryColorLight : Colors.blue,
         child: Text(task.rank.toString()),
       ),
       title: Text(

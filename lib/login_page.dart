@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
+
 
 import 'auth_service.dart';
 
@@ -18,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
     const url = 'https://www.raghumolabanti.com/privacy-policy';
     final uri = Uri.parse(url);
     if(kIsWeb){
-      await launchUrl(uri,webOnlyWindowName:  '_blank',);
+      html.window.open(url,"_blank");
     } else if(await canLaunchUrl(uri)){
       await launchUrl(uri);
     } else {

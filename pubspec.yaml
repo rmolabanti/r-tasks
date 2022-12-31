@@ -43,6 +43,7 @@ dependencies:
   cloud_firestore: ^4.2.0
   url_launcher: ^6.1.7
   url_launcher_web: ^2.0.13
+  flutter_html: ^2.2.1
 
 dev_dependencies:
   flutter_test:
