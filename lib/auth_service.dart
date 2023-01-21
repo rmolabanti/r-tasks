@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -12,13 +14,13 @@ class AuthService {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (BuildContext context, snapshot) {
           if (snapshot.hasData) {
-            print('User is signed in!');
+            log('User is signed in!');
             User? user = snapshot.data;
             if(user!=null){
               return TasksHome(user:user);
             }
           }
-          print('User is currently signed out!');
+          log('User is currently signed out!');
           return const LoginPage();
         });
   }
@@ -27,13 +29,10 @@ class AuthService {
     // Create a new provider
     GoogleAuthProvider googleProvider = GoogleAuthProvider();
     //googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
-    // googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
+    //googleProvider.setCustomParameters({'login_hint': 'user@example.com'});
 
     // Once signed in, return the UserCredential
     return await FirebaseAuth.instance.signInWithPopup(googleProvider);
-
-    // Or use signInWithRedirect
-    // return await FirebaseAuth.instance.signInWithRedirect(googleProvider);
   }
 
   //Sign out

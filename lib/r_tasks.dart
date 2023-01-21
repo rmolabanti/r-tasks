@@ -1,15 +1,13 @@
+
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:r_tasks/auth_service.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
 
+import 'TaskItemWidget.dart';
 import 'add_task_form.dart';
-
-// Future<void> main() async {
-//   runApp(const TasksHome());
-// }
 
 class TasksHome extends StatelessWidget {
   final User user;
@@ -52,6 +50,7 @@ class _TasksPageState extends State<TasksPage> {
   void _handleTaskChange(Task task) {
     setState(() {
       dao.updateTask(task);
+      tasksFuture = Future.value(widget.tasks);
     });
   }
 
@@ -59,7 +58,18 @@ class _TasksPageState extends State<TasksPage> {
     var task = Task(uid: widget.uid, name: name);
     dao.addTask(task).then((updatedTask) => setState(() {
           widget.tasks.add(updatedTask);
+          tasksFuture = Future.value(widget.tasks);
         }));
+  }
+
+  void _deleteCompleted() {
+    log('deleting completed tasks');
+    dao.deleteCompleted(widget.uid).then((list) => setState((){
+      log('tasks count: ${widget.tasks.length}');
+      widget.tasks.removeWhere((task) => list.any((element) => task.id == element.id));
+      log('tasks count: ${widget.tasks.length}');
+      tasksFuture = Future.value(widget.tasks);
+    }));
   }
 
   @override
@@ -71,130 +81,102 @@ class _TasksPageState extends State<TasksPage> {
   @override
   Widget build(BuildContext context) {
 
-    getView(List<Task> tasks) {
-
-      for(var task in tasks){
-        if(!widget.tasks.contains(task)){
-          widget.tasks.add(task);
-        }
-      }
-
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-          actions: [
-              IconButton(
-                icon: const Icon(Icons.logout_rounded),
-                iconSize: 35,
-                color: Theme.of(context).scaffoldBackgroundColor,
-                onPressed: () {
-                  AuthService().signOut();
-                },
-              ),
-            ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          children: widget.tasks.map((task) {
-            return TaskItem(
-              task: task,
-              onTaskChanged: _handleTaskChange,
-            );
-          }).toList(),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) =>
-                    AddTaskForm(onTaskAdded: _handleNewTask)));
-          },
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
-        ), // This trailing comma makes auto-formatting nicer for build methods.
-      );
-    }
-
     return FutureBuilder(
         future: tasksFuture,
         builder: (context, snapshot) {
+          log('snapshot has data: ${snapshot.hasData}');
           if (snapshot.hasData) {
-            return getView(snapshot.data!);
+            log('tasks count: ${widget.tasks.length}');
+            for(var task in snapshot.data!){
+              if(!widget.tasks.contains(task)){
+                widget.tasks.add(task);
+              }
+            }
+            log('tasks count: ${widget.tasks.length}');
+            return buildScreen(widget.tasks);
           } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           } else {
-            return CircularProgressIndicator();
+            return Transform.scale(
+              scale: 0.1,
+              child: const CircularProgressIndicator(strokeWidth: 20.0,),
+            );
           }
         },
     );
   }
-}
 
-class TaskItem extends StatelessWidget {
-  TaskItem({required this.task, required this.onTaskChanged})
-      : super(key: ObjectKey(task));
-
-  final Task task;
-  final void Function(Task) onTaskChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: () {
-        task.isDone=!task.isDone;
-        onTaskChanged(task);
-      },
-      leading: CircleAvatar(
-        backgroundColor:
-            task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColorDark,
-        child: Text(task.rank.toString(),style: const TextStyle(color: Colors.black)),
-      ),
-      title: Text(
-        task.name,
-        style: _getTextStyle(context),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.exposure_plus_1_rounded),
-            iconSize: 35,
-            color: task.isDone ? Theme.of(context).disabledColor : Colors.green,
-            onPressed: () {
-              if(!task.isDone){
-                task.rank=task.rank+1;
-                onTaskChanged(task);
-              }
-            },
+  Drawer buildDrawer(BuildContext context) {
+    return Drawer(
+        child: ListView(
+          children: [
+            SizedBox(
+            height: kToolbarHeight + 10,
+            child: DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).secondaryHeaderColor,
+              ),
+              child: const Text('Actions',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  )),
+            ),
           ),
-           IconButton(
-            icon: const Icon(Icons.exposure_minus_1_rounded),
-             iconSize: 35,
-             color: task.isDone ? Theme.of(context).disabledColor : Colors.red,
-            onPressed: () {
-              if(!task.isDone) {
-                task.rank = task.rank - 1;
-                onTaskChanged(task);
-              }
-            },
-          ),
+            ListTile(
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('delete'),
+              onTap: (){
+                _deleteCompleted();
+                Navigator.pop(context);
+              },
+            ),
+        ],
+    ),
+    );
+    }
+
+  buildScreen(List<Task> tasks) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
           IconButton(
-            icon: const Icon(Icons.copy_rounded),
+            icon: const Icon(Icons.logout_rounded),
             iconSize: 35,
-            color: task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColor,
+            color: Theme.of(context).scaffoldBackgroundColor,
             onPressed: () {
-              Clipboard.setData(ClipboardData(text: task.name));
+              AuthService().signOut();
             },
           ),
         ],
       ),
-    );
-  }
-
-  TextStyle? _getTextStyle(BuildContext context) {
-    if (!task.isDone) return null;
-    return const TextStyle(
-      color: Colors.black54,
-      decoration: TextDecoration.lineThrough,
+      drawer: buildDrawer(context),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        children: widget.tasks.map((task) {
+          return TaskItem(
+            task: task,
+            onTaskChanged: _handleTaskChange,
+          );
+        }).toList(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  AddTaskForm(onTaskAdded: _handleNewTask)));
+        },
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
+
+
