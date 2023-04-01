@@ -2,6 +2,7 @@
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:r_tasks/TimerScreen.dart';
 import 'package:r_tasks/auth_service.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
@@ -44,12 +45,32 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
+  int _currentIndex = 0;
   final TasksDao dao = TasksDao();
   late Future<List<Task>> tasksFuture;
 
+  final PageController _pageController = PageController();
+
+  void _onPageChanged(index) {
+    setState(() {
+      log('onPageChanged > _currentIndex: $index');
+      _currentIndex = index;
+    });
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      log('_onItemTapped > _currentIndex: $index');
+      _currentIndex = index;
+      _pageController.animateToPage(index, duration: const Duration(milliseconds: 500), curve: Curves.ease);
+    });
+  }
+
   void _handleTaskChange(Task task) {
     setState(() {
+      log('_handleTaskChange: ${task.isDone}');
       dao.updateTask(task);
+      log('_handleTaskChange: ${widget.tasks.map((e) => e.isDone)}');
       tasksFuture = Future.value(widget.tasks);
     });
   }
@@ -86,13 +107,14 @@ class _TasksPageState extends State<TasksPage> {
         builder: (context, snapshot) {
           log('snapshot has data: ${snapshot.hasData}');
           if (snapshot.hasData) {
-            log('tasks count: ${widget.tasks.length}');
+            log('tasks count 1: ${widget.tasks.length}');
+            log('tasks: ${widget.tasks.map((e) => e.isDone)}');
             for(var task in snapshot.data!){
               if(!widget.tasks.contains(task)){
                 widget.tasks.add(task);
               }
             }
-            log('tasks count: ${widget.tasks.length}');
+            log('tasks count 2: ${widget.tasks.length}');
             return buildScreen(widget.tasks);
           } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
@@ -142,6 +164,7 @@ class _TasksPageState extends State<TasksPage> {
     }
 
   buildScreen(List<Task> tasks) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -157,14 +180,15 @@ class _TasksPageState extends State<TasksPage> {
         ],
       ),
       drawer: buildDrawer(context),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        children: widget.tasks.map((task) {
-          return TaskItem(
-            task: task,
-            onTaskChanged: _handleTaskChange,
-          );
-        }).toList(),
+      //body: buildAllTasksView(),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: [
+          homeScreen(),
+          const StopwatchPage(),
+          focusScreen(),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -174,7 +198,54 @@ class _TasksPageState extends State<TasksPage> {
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timer),
+            label: 'Timer',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.tips_and_updates),
+            label: 'Focus',
+          ),
+        ],
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
+// This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  ListView homeScreen() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      children: widget.tasks.map((task) {
+        log('homeScreen > widget.tasks.map : ${task.isDone}');
+        return TaskItem(
+          task: task,
+          onTaskChanged: _handleTaskChange,
+        );
+      }).toList(),
+    );
+  }
+
+  ListView timerScreen() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      children: const [Text('Timer')],
+    );
+  }
+
+  ListView focusScreen() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      children: const [Text('Focus')],
     );
   }
 }
