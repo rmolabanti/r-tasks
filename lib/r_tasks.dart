@@ -7,7 +7,7 @@ import 'package:r_tasks/auth_service.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
 
-import 'TaskItemWidget.dart';
+import 'HomeScreen.dart';
 import 'add_task_form.dart';
 
 class TasksHome extends StatelessWidget {
@@ -185,7 +185,7 @@ class _TasksPageState extends State<TasksPage> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          homeScreen(),
+          HomeScreenPage(tasks: tasks,onTaskChange: _handleTaskChange,),
           const StopwatchPage(),
           focusScreen(),
         ],
@@ -219,26 +219,6 @@ class _TasksPageState extends State<TasksPage> {
         onTap: _onItemTapped,
       ),
 // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  ListView homeScreen() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      children: widget.tasks.map((task) {
-        log('homeScreen > widget.tasks.map : ${task.isDone}');
-        return TaskItem(
-          task: task,
-          onTaskChanged: _handleTaskChange,
-        );
-      }).toList(),
-    );
-  }
-
-  ListView timerScreen() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      children: const [Text('Timer')],
     );
   }
 
