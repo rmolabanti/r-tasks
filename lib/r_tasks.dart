@@ -2,11 +2,14 @@
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:r_tasks/TasksController.dart';
 import 'package:r_tasks/TimerScreen.dart';
 import 'package:r_tasks/auth_service.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
 
+import 'FocusScreen.dart';
 import 'HomeScreen.dart';
 import 'add_task_form.dart';
 
@@ -26,7 +29,6 @@ class TasksHome extends StatelessWidget {
       home: TasksPage(
         title: '${user.displayName??'RM'} Tasks',
         uid: user.uid,
-        tasks: [],
       ),
     );
   }
@@ -35,21 +37,20 @@ class TasksHome extends StatelessWidget {
 class TasksPage extends StatefulWidget {
   final String uid;
   final String title;
-  final List<Task> tasks;
+  final TasksController tasksController;
 
-  const TasksPage(
-      {super.key, required this.title, required this.uid, required this.tasks});
+  TasksPage({super.key, required this.title, required this.uid,}): tasksController = Get.put(TasksController(uid));
 
   @override
   State<TasksPage> createState() => _TasksPageState();
 }
 
 class _TasksPageState extends State<TasksPage> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
+  List<Task> tasks = [];
   final TasksDao dao = TasksDao();
-  late Future<List<Task>> tasksFuture;
 
-  final PageController _pageController = PageController();
+  final PageController _pageController = PageController(initialPage: 1);
 
   void _onPageChanged(index) {
     setState(() {
@@ -70,62 +71,19 @@ class _TasksPageState extends State<TasksPage> {
     setState(() {
       log('_handleTaskChange: ${task.isDone}');
       dao.updateTask(task);
-      log('_handleTaskChange: ${widget.tasks.map((e) => e.isDone)}');
-      tasksFuture = Future.value(widget.tasks);
+      log('_handleTaskChange: ${tasks.map((e) => e.isDone)}');
     });
-  }
-
-  void _handleNewTask({required String name}) {
-    var task = Task(uid: widget.uid, name: name);
-    dao.addTask(task).then((updatedTask) => setState(() {
-          widget.tasks.add(updatedTask);
-          tasksFuture = Future.value(widget.tasks);
-        }));
-  }
-
-  void _deleteCompleted() {
-    log('deleting completed tasks');
-    dao.deleteCompleted(widget.uid).then((list) => setState((){
-      log('tasks count: ${widget.tasks.length}');
-      widget.tasks.removeWhere((task) => list.any((element) => task.id == element.id));
-      log('tasks count: ${widget.tasks.length}');
-      tasksFuture = Future.value(widget.tasks);
-    }));
   }
 
   @override
   void initState() {
     super.initState();
-    tasksFuture = dao.getAll(widget.uid);
+    tasks = [];
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return FutureBuilder(
-        future: tasksFuture,
-        builder: (context, snapshot) {
-          log('snapshot has data: ${snapshot.hasData}');
-          if (snapshot.hasData) {
-            log('tasks count 1: ${widget.tasks.length}');
-            log('tasks: ${widget.tasks.map((e) => e.isDone)}');
-            for(var task in snapshot.data!){
-              if(!widget.tasks.contains(task)){
-                widget.tasks.add(task);
-              }
-            }
-            log('tasks count 2: ${widget.tasks.length}');
-            return buildScreen(widget.tasks);
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            return Transform.scale(
-              scale: 0.1,
-              child: const CircularProgressIndicator(strokeWidth: 20.0,),
-            );
-          }
-        },
-    );
+    return buildScreen();
   }
 
   Drawer buildDrawer(BuildContext context) {
@@ -154,7 +112,15 @@ class _TasksPageState extends State<TasksPage> {
             ListTile(
               title: const Text('delete'),
               onTap: (){
-                _deleteCompleted();
+                widget.tasksController.deleteCompleted(widget.uid);
+                setState(() {});
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Focus List'),
+              onTap: (){
+                widget.tasksController.refreshFocusTasks();
                 Navigator.pop(context);
               },
             ),
@@ -163,7 +129,7 @@ class _TasksPageState extends State<TasksPage> {
     );
     }
 
-  buildScreen(List<Task> tasks) {
+  buildScreen() {
 
     return Scaffold(
       appBar: AppBar(
@@ -185,16 +151,15 @@ class _TasksPageState extends State<TasksPage> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          HomeScreenPage(tasks: tasks,onTaskChange: _handleTaskChange,),
+          HomeScreenPage(uid:widget.uid,onTaskChange: _handleTaskChange,tasks: tasks),
+          FocusScreen(uid:widget.uid, onTaskChange: _handleTaskChange,),
           const StopwatchPage(),
-          focusScreen(),
+
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) =>
-                  AddTaskForm(onTaskAdded: _handleNewTask)));
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm()));
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
@@ -206,12 +171,12 @@ class _TasksPageState extends State<TasksPage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.timer),
-            label: 'Timer',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.tips_and_updates),
             label: 'Focus',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timer),
+            label: 'Timer',
           ),
         ],
         currentIndex: _currentIndex,
@@ -219,13 +184,6 @@ class _TasksPageState extends State<TasksPage> {
         onTap: _onItemTapped,
       ),
 // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  ListView focusScreen() {
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      children: const [Text('Focus')],
     );
   }
 }

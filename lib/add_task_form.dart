@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'TasksController.dart';
 
 class AddTaskForm extends StatefulWidget {
-  final void Function({required String name}) onTaskAdded;
-
-  const AddTaskForm({super.key, required this.onTaskAdded});
+  final TasksController tasksController = Get.find();
+  AddTaskForm({super.key});
 
   @override
   State<StatefulWidget> createState() => AddTaskFormState();
@@ -50,7 +52,7 @@ class AddTaskFormState extends State<AddTaskForm> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(addTaskController.text)),
                             );
-                            widget.onTaskAdded(name: addTaskController.text);
+                            widget.tasksController.handleNewTask(addTaskController.text);
                             Navigator.of(context).pop();
                           }
                         },

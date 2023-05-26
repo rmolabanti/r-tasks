@@ -44,6 +44,7 @@ dependencies:
   url_launcher: ^6.1.7
   url_launcher_web: ^2.0.13
   flutter_html: ^2.2.1
+  get: ^4.6.5
 
 dev_dependencies:
   flutter_test:
