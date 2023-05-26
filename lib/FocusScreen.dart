@@ -1,20 +1,18 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:r_tasks/task.dart';
-import 'package:r_tasks/tasks_dao.dart';
+import 'package:get/get.dart';
 
 import 'FocusTaskItem.dart';
+import 'TasksController.dart';
 
 class FocusScreen extends StatefulWidget {
   final String uid;
-  final void Function(Task task) onTaskChange;
+  final TasksController tasksController = Get.find();
 
-  const FocusScreen({
+  FocusScreen({
     super.key,
     required this.uid,
-    required this.onTaskChange,
   });
 
   @override
@@ -22,41 +20,24 @@ class FocusScreen extends StatefulWidget {
 }
 
 class _FocusScreenState extends State<FocusScreen> {
-  late Future<List<Task>> tasksFuture;
-  final TasksDao dao = TasksDao();
 
   @override
   void initState() {
     super.initState();
-    tasksFuture = dao.getFocusTasks(widget.uid);
+    widget.tasksController.loadFocusTasks();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: tasksFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              children: snapshot.data!.map((task) {
-                log('FocusScreen > widget.tasks.map : ${task.isDone}');
-                return FocusTaskItem(
-                  task: task,
-                  onTaskChanged: widget.onTaskChange,
-                );
-              }).toList(),
-            );
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            return Transform.scale(
-              scale: 0.1,
-              child: const CircularProgressIndicator(
-                strokeWidth: 20.0,
-              ),
-            );
-          }
-        });
+    return Obx(() => ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      children: widget.tasksController.getFocusTasks().map((task) {
+        log('FocusScreen > widget.tasks.map : ${task.isDone}');
+        return FocusTaskItem(
+          task: task,
+          onTaskChanged: widget.tasksController.handleTaskChange,
+        );
+      }).toList(),
+    ));
   }
 }

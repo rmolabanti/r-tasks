@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
 import 'login_page.dart';
-import 'r_tasks.dart';
+import 'AppHome.dart';
 
 class AuthService {
 
@@ -17,7 +17,7 @@ class AuthService {
             log('User is signed in!');
             User? user = snapshot.data;
             if(user!=null){
-              return TasksHome(user:user);
+              return AppHome(user:user);
             }
           }
           log('User is currently signed out!');

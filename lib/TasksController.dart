@@ -6,7 +6,7 @@ import 'package:r_tasks/tasks_dao.dart';
 
 class TasksController extends GetxController{
   final String uid;
-  final Set<Task> tasks = <Task>{}.obs;
+  final RxSet<Task> tasks = <Task>{}.obs;
   final List<Task> allTasks = <Task>[].obs;
   final Set<Task> focusTasks = <Task>{}.obs;
   final TasksDao dao = TasksDao();
@@ -26,7 +26,16 @@ class TasksController extends GetxController{
     tasks.addAll(allTasks);
   }
 
-  Set<Task> getTasks(){
+  void loadFocusTasks() async {
+    focusTasks.clear();
+    focusTasks.addAll(await dao.getFocusTasks(uid));
+  }
+
+  Set<Task> getFocusTasks() {
+    return focusTasks;
+  }
+
+  RxSet<Task> getTasks(){
     return tasks;
   }
 
@@ -68,6 +77,17 @@ class TasksController extends GetxController{
   void refreshFocusTasks() {
     log('Refresh focus tasks');
     dao.refreshFocusTasks(uid);
+    loadFocusTasks();
   }
+
+  void handleTaskChange(Task task) {
+    dao.updateTask(task);
+    tasks.add(task);
+    if(focusTasks.contains(task)){
+      focusTasks.add(task);
+    }
+  }
+
+
 
 }

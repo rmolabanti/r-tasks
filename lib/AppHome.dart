@@ -6,17 +6,15 @@ import 'package:get/get.dart';
 import 'package:r_tasks/TasksController.dart';
 import 'package:r_tasks/TimerScreen.dart';
 import 'package:r_tasks/auth_service.dart';
-import 'package:r_tasks/task.dart';
-import 'package:r_tasks/tasks_dao.dart';
 
 import 'FocusScreen.dart';
 import 'HomeScreen.dart';
 import 'add_task_form.dart';
 
-class TasksHome extends StatelessWidget {
+class AppHome extends StatelessWidget {
   final User user;
 
-  const TasksHome({super.key, required this.user});
+  const AppHome({super.key, required this.user});
 
   // This widget is the root of your application.
   @override
@@ -26,7 +24,7 @@ class TasksHome extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: TasksPage(
+      home: AppLayout(
         title: '${user.displayName??'RM'} Tasks',
         uid: user.uid,
       ),
@@ -34,22 +32,19 @@ class TasksHome extends StatelessWidget {
   }
 }
 
-class TasksPage extends StatefulWidget {
+class AppLayout extends StatefulWidget {
   final String uid;
   final String title;
   final TasksController tasksController;
 
-  TasksPage({super.key, required this.title, required this.uid,}): tasksController = Get.put(TasksController(uid));
+  AppLayout({super.key, required this.title, required this.uid,}): tasksController = Get.put(TasksController(uid));
 
   @override
-  State<TasksPage> createState() => _TasksPageState();
+  State<AppLayout> createState() => _AppLayoutState();
 }
 
-class _TasksPageState extends State<TasksPage> {
+class _AppLayoutState extends State<AppLayout> {
   int _currentIndex = 1;
-  List<Task> tasks = [];
-  final TasksDao dao = TasksDao();
-
   final PageController _pageController = PageController(initialPage: 1);
 
   void _onPageChanged(index) {
@@ -67,23 +62,78 @@ class _TasksPageState extends State<TasksPage> {
     });
   }
 
-  void _handleTaskChange(Task task) {
-    setState(() {
-      log('_handleTaskChange: ${task.isDone}');
-      dao.updateTask(task);
-      log('_handleTaskChange: ${tasks.map((e) => e.isDone)}');
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    tasks = [];
   }
 
   @override
   Widget build(BuildContext context) {
-    return buildScreen();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          buildLogoutButton(context),
+        ],
+      ),
+      drawer: buildDrawer(context),
+      //body: buildAllTasksView(),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: [
+          HomeScreenPage(uid:widget.uid),
+          FocusScreen(uid:widget.uid),
+          const StopwatchPage(),
+        ],
+      ),
+      floatingActionButton: buildAddTaskFloatingActionButton(context),
+      bottomNavigationBar: buildBottomNavigationBar(),
+// This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  BottomNavigationBar buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.tips_and_updates),
+          label: 'Focus',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.timer),
+          label: 'Timer',
+        ),
+      ],
+      currentIndex: _currentIndex,
+      selectedItemColor: Colors.amber[800],
+      onTap: _onItemTapped,
+    );
+  }
+
+  FloatingActionButton buildAddTaskFloatingActionButton(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm()));
+      },
+      tooltip: 'Increment',
+      child: const Icon(Icons.add),
+    );
+  }
+
+  IconButton buildLogoutButton(BuildContext context) {
+    return IconButton(
+          icon: const Icon(Icons.logout_rounded),
+          iconSize: 35,
+          color: Theme.of(context).scaffoldBackgroundColor,
+          onPressed: () {
+            AuthService().signOut();
+          },
+        );
   }
 
   Drawer buildDrawer(BuildContext context) {
@@ -128,64 +178,6 @@ class _TasksPageState extends State<TasksPage> {
     ),
     );
     }
-
-  buildScreen() {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            iconSize: 35,
-            color: Theme.of(context).scaffoldBackgroundColor,
-            onPressed: () {
-              AuthService().signOut();
-            },
-          ),
-        ],
-      ),
-      drawer: buildDrawer(context),
-      //body: buildAllTasksView(),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        children: [
-          HomeScreenPage(uid:widget.uid,onTaskChange: _handleTaskChange,tasks: tasks),
-          FocusScreen(uid:widget.uid, onTaskChange: _handleTaskChange,),
-          const StopwatchPage(),
-
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm()));
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.tips_and_updates),
-            label: 'Focus',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.timer),
-            label: 'Timer',
-          ),
-        ],
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
-      ),
-// This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
 }
 
 
