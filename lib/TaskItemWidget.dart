@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:r_tasks/task.dart';
 
+import 'add_task_form.dart';
+
 class TaskItem extends StatelessWidget {
   TaskItem({required this.task, required this.onTaskChanged})
       : super(key: ObjectKey(task));
@@ -47,6 +49,16 @@ class TaskItem extends StatelessWidget {
               if(!task.isDone) {
                 task.rank = task.rank - 1;
                 onTaskChanged(task);
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            iconSize: 35,
+            color: task.isDone ? Theme.of(context).disabledColor : Colors.red,
+            onPressed: () {
+              if(!task.isDone) {
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm(task:task)));
               }
             },
           ),

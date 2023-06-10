@@ -74,6 +74,15 @@ class TasksController extends GetxController{
     });
   }
 
+  void updateTask(Task task) {
+    dao.updateTask(task).then((v){
+      allTasks.removeWhere((element) => task.id == element.id);
+      tasks.removeWhere((element) => task.id == element.id);
+      allTasks.add(task);
+      tasks.add(task);
+    });
+  }
+
   void refreshFocusTasks() {
     log('Refresh focus tasks');
     dao.refreshFocusTasks(uid);
