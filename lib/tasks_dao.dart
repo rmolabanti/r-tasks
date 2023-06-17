@@ -60,8 +60,10 @@ class TasksDao{
     var snapshot = await ref.update(task.toMap());
 
     var focusTasks = FirebaseFirestore.instance.collection("focus_tasks");
-    var focusTasksRef = focusTasks.doc(task.id);
-    await focusTasksRef.update(task.toMap());
+    DocumentSnapshot fdSnapshot = await focusTasks.doc(task.id).get();
+    if(fdSnapshot.exists){
+      await focusTasks.doc(task.id).update(task.toMap());
+    }
     return snapshot;
   }
 

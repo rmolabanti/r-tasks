@@ -118,7 +118,7 @@ class _AppLayoutState extends State<AppLayout> {
   FloatingActionButton buildAddTaskFloatingActionButton(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm()));
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddTaskForm(task:widget.tasksController.newTask())));
       },
       tooltip: 'Increment',
       child: const Icon(Icons.add),

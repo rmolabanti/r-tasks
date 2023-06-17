@@ -27,6 +27,10 @@ class TaskItem extends StatelessWidget {
         task.name,
         style: _getTextStyle(context),
       ),
+      subtitle: Text(
+        task.tags.join(', '),
+        style: _getTextStyle(context),
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -37,17 +41,6 @@ class TaskItem extends StatelessWidget {
             onPressed: () {
               if(!task.isDone){
                 task.rank=task.rank+1;
-                onTaskChanged(task);
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.exposure_minus_1_rounded),
-            iconSize: 35,
-            color: task.isDone ? Theme.of(context).disabledColor : Colors.red,
-            onPressed: () {
-              if(!task.isDone) {
-                task.rank = task.rank - 1;
                 onTaskChanged(task);
               }
             },

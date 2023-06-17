@@ -4,6 +4,7 @@ class Task {
   String name='';
   bool isDone=false;
   int rank=0;
+  List<String> tags=[];
 
   Task({required this.uid,required this.name});
 
@@ -13,6 +14,7 @@ class Task {
       'name': name,
       'isDone': isDone,
       'rank':rank,
+      'tags':tags,
     };
   }
 
@@ -21,6 +23,11 @@ class Task {
     task.id=id;
     task.isDone =map['isDone'];
     task.rank =map['rank']??0;
+    if(map['tags']!=null){
+      task.tags =map['tags'].cast<String>();
+    }else{
+      task.tags =[];
+    }
     return task;
   }
 

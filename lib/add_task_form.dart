@@ -6,23 +6,51 @@ import 'TasksController.dart';
 
 class AddTaskForm extends StatefulWidget {
   final TasksController tasksController = Get.find();
-  final Task? task;
-  AddTaskForm({super.key,this.task});
+  final Task task;
+
+  AddTaskForm({super.key,required this.task});
 
   @override
-  State<StatefulWidget> createState() => AddTaskFormState(task);
+  State<StatefulWidget> createState() => AddTaskFormState();
 }
 
 class AddTaskFormState extends State<AddTaskForm> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController addTaskController;
+  late TextEditingController addTaskController;
+  final TextEditingController _tagController = TextEditingController();
 
-  AddTaskFormState(task): addTaskController = TextEditingController(text:task?.name);
+  void _addTag() {
+    String newTag = _tagController.text.trim();
+    if (newTag.isNotEmpty) {
+      setState(() {
+        widget.task.tags.add(newTag);
+        _tagController.clear();
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    addTaskController = TextEditingController(text:widget.task.name);
+  }
 
   @override
   void dispose() {
     addTaskController.dispose();
+    _tagController.dispose();
     super.dispose();
+  }
+
+  Widget _buildTagChip(String tag) {
+    return Chip(
+      label: Text(tag),
+      onDeleted: () {
+        setState(() {
+          widget.task.tags.remove(tag);
+        });
+      },
+    );
   }
 
   @override
@@ -47,6 +75,25 @@ class AddTaskFormState extends State<AddTaskForm> {
                     },
                   ),
                 ),
+                Wrap(
+                  spacing: 8,
+                  children: widget.task.tags.map((tag) => _buildTagChip(tag)).toList(),
+                ),
+                Padding(padding: const EdgeInsets.all(8),
+                  child: TextField(
+                    controller: _tagController,
+                    onSubmitted: (value) {
+                      _addTag();
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Tag',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: _addTag,
+                      ),
+                    ),
+                  ),
+                ),
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -56,16 +103,17 @@ class AddTaskFormState extends State<AddTaskForm> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(addTaskController.text)),
                             );
-                            if(widget.task != null){
-                              widget.task!.name=addTaskController.text;
-                              widget.tasksController.updateTask(widget.task!);
+                            if(widget.task.name.isNotEmpty){
+                              widget.task.name=addTaskController.text;
+                              widget.tasksController.updateTask(widget.task);
                             }else{
-                              widget.tasksController.handleNewTask(addTaskController.text);
+                              widget.task.name=addTaskController.text;
+                              widget.tasksController.handleNewTask(widget.task);
                             }
                             Navigator.of(context).pop();
                           }
                         },
-                        child: Text(widget.task != null ? "Update":"Add"),
+                        child: Text(widget.task.name.isNotEmpty  ? "Update":"Add"),
                     ),
                   ),
                 ),

@@ -43,7 +43,7 @@ class TasksController extends GetxController{
     List<Task> filteredList = [];
     if (query.isNotEmpty) {
       for (var task in allTasks) {
-        if (task.name.toLowerCase().contains(query.toLowerCase())) {
+        if (task.name.toLowerCase().contains(query.toLowerCase())||task.tags.any((element) => element.toLowerCase().contains(query.toLowerCase()))) {
           filteredList.add(task);
         }
       }
@@ -66,8 +66,7 @@ class TasksController extends GetxController{
     });
   }
 
-  void handleNewTask(name) {
-    var task = Task(uid: uid, name: name);
+  void handleNewTask(Task task) {
     dao.addTask(task).then((updatedTask){
       allTasks.add(updatedTask);
       tasks.add(updatedTask);
@@ -95,6 +94,10 @@ class TasksController extends GetxController{
     if(focusTasks.contains(task)){
       focusTasks.add(task);
     }
+  }
+
+  Task newTask() {
+    return Task(uid: uid, name: '');
   }
 
 
