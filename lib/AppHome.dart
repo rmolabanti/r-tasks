@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:r_tasks/FocusListSettingsScreen.dart';
 import 'package:r_tasks/TasksController.dart';
 import 'package:r_tasks/TimerScreen.dart';
 import 'package:r_tasks/auth_service.dart';
@@ -174,10 +175,18 @@ class _AppLayoutState extends State<AppLayout> {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              title: const Text('Focus List Settings'),
+              onTap: (){
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => FocusListSettingsScreen()));
+                //Navigator.pop(context);
+              },
+            ),
         ],
     ),
     );
     }
 }
+
 
 

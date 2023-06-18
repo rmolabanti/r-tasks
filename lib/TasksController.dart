@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:get/get.dart';
+import 'package:r_tasks/FocusListSettings.dart';
 import 'package:r_tasks/task.dart';
 import 'package:r_tasks/tasks_dao.dart';
 
@@ -9,9 +10,11 @@ class TasksController extends GetxController{
   final RxSet<Task> tasks = <Task>{}.obs;
   final List<Task> allTasks = <Task>[].obs;
   final Set<Task> focusTasks = <Task>{}.obs;
+  final Rx<FocusListSettings> focusListSettings;
   final TasksDao dao = TasksDao();
 
-  TasksController(this.uid);
+  TasksController(this.uid):
+        focusListSettings = FocusListSettings(uid:uid).obs;
 
   getAll(String uid) async {
     log('TasksController > getAll');
@@ -82,28 +85,25 @@ class TasksController extends GetxController{
     });
   }
 
-  void refreshFocusTasks() {
+  void refreshFocusTasks() async {
     log('Refresh focus tasks');
-    dao.refreshFocusTasks(uid);
-    loadFocusTasks();
-
     List<Task> openTasks = allTasks.where((task) => !task.isDone).toList();
     openTasks.sort((a, b) => b.rank.compareTo(a.rank));
     List<Task> topTasks = openTasks.take(5).toList();
 
-    if(!topTasks.any((element) => element.tags.any((tag) => tag.toLowerCase() == 'learning'))){
-      Task? learningTask = allTasks.firstWhere((element) => element.tags.any((tag) => tag.toLowerCase() == 'learning'),orElse: () => newTask());
-      if(learningTask.id.isNotEmpty){
-        topTasks.removeLast();
-        topTasks.add(learningTask);
+    loadFocusListSettings();
+    for(String fTag in focusListSettings.value.tags){
+      if(!topTasks.any((element) => element.tags.any((tag) => tag.toLowerCase() == fTag.toLowerCase()))){
+        Task? tagTask = allTasks.firstWhere((element) => element.tags.any((tag) => tag.toLowerCase() == fTag.toLowerCase()),orElse: () => newTask());
+        if(tagTask.id.isNotEmpty){
+          var lastWhereTask = topTasks.lastWhere((element) => element.tags.isEmpty || element.tags.any((tag) => !focusListSettings.value.tags.any((fTag) => fTag.toLowerCase() == tag.toLowerCase())),orElse: () => topTasks.last);
+          topTasks.remove(lastWhereTask);
+          topTasks.add(tagTask);
+        }
       }
     }
-
-    //print tempTasks
-    topTasks.forEach((element) {
-      //print(element.name);
-    });
-
+    await dao.updateFocusTasks(uid,topTasks);
+    loadFocusTasks();
   }
 
   void handleTaskChange(Task task) {
@@ -122,6 +122,30 @@ class TasksController extends GetxController{
     return Task(uid: uid, name: '');
   }
 
+  void loadFocusListSettings() async {
+     FocusListSettings flsFromDB = await dao.getFocusListSettings(uid);
+     focusListSettings(flsFromDB);
+  }
 
+  FocusListSettings getFocusListSettings() {
+    return focusListSettings.value;
+  }
+
+  void addTag(String newTag) {
+    focusListSettings.update((fls) {
+      fls?.tags.add(newTag);
+    });
+  }
+
+  void removeTag(String tag) {
+    focusListSettings.update((fls) {
+      fls?.tags.remove(tag);
+    });
+  }
+
+  void saveFocusListSettings() async {
+    var updateFocusListSettings = await dao.updateFocusListSettings(focusListSettings.value);
+    focusListSettings(updateFocusListSettings);
+  }
 
 }
