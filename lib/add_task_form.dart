@@ -94,6 +94,15 @@ class AddTaskFormState extends State<AddTaskForm> {
                     ),
                   ),
                 ),
+                SwitchListTile(
+                  title: const Text('Repeat'),
+                  value: widget.task.isRepeating,
+                  onChanged: (value) {
+                    setState(() {
+                      widget.task.isRepeating = value;
+                    });
+                  },
+                ),
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),

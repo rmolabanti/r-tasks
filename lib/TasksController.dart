@@ -86,6 +86,24 @@ class TasksController extends GetxController{
     log('Refresh focus tasks');
     dao.refreshFocusTasks(uid);
     loadFocusTasks();
+
+    List<Task> openTasks = allTasks.where((task) => !task.isDone).toList();
+    openTasks.sort((a, b) => b.rank.compareTo(a.rank));
+    List<Task> topTasks = openTasks.take(5).toList();
+
+    if(!topTasks.any((element) => element.tags.any((tag) => tag.toLowerCase() == 'learning'))){
+      Task? learningTask = allTasks.firstWhere((element) => element.tags.any((tag) => tag.toLowerCase() == 'learning'),orElse: () => newTask());
+      if(learningTask.id.isNotEmpty){
+        topTasks.removeLast();
+        topTasks.add(learningTask);
+      }
+    }
+
+    //print tempTasks
+    topTasks.forEach((element) {
+      //print(element.name);
+    });
+
   }
 
   void handleTaskChange(Task task) {
@@ -93,6 +111,10 @@ class TasksController extends GetxController{
     tasks.add(task);
     if(focusTasks.contains(task)){
       focusTasks.add(task);
+    }
+    if(task.isRepeating && task.isDone){
+      var newTask = task.copyWith(rank: task.rank);
+      handleNewTask(newTask);
     }
   }
 

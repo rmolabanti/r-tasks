@@ -19,7 +19,7 @@ class FocusTaskItem extends StatelessWidget {
       },
       leading: CircleAvatar(
         backgroundColor:
-        task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColorDark,
+        task.isDone ? Theme.of(context).primaryColorLight : task.isRepeating? Colors.green : Theme.of(context).primaryColor,
         child: Text(task.rank.toString(),style: const TextStyle(color: Colors.black)),
       ),
       title: Text(
@@ -35,7 +35,7 @@ class FocusTaskItem extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.timer),
-            iconSize: 35,
+            iconSize: 25,
             color: task.isDone ? Theme.of(context).disabledColor : Colors.green,
             onPressed: () {
 
@@ -43,7 +43,7 @@ class FocusTaskItem extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.copy_rounded),
-            iconSize: 35,
+            iconSize: 25,
             color: task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColor,
             onPressed: () {
               Clipboard.setData(ClipboardData(text: task.name));
