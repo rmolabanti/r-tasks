@@ -87,6 +87,9 @@ class TasksController extends GetxController{
 
   void refreshFocusTasks() async {
     log('Refresh focus tasks');
+    
+    increaseRankOfOldestTask(allTasks);
+    
     List<Task> openTasks = allTasks.where((task) => !task.isDone).toList();
     openTasks.sort((a, b) => b.rank.compareTo(a.rank));
     List<Task> topTasks = openTasks.take(5).toList();
@@ -146,6 +149,12 @@ class TasksController extends GetxController{
   void saveFocusListSettings() async {
     var updateFocusListSettings = await dao.updateFocusListSettings(focusListSettings.value);
     focusListSettings(updateFocusListSettings);
+  }
+
+  void increaseRankOfOldestTask(List<Task> allTasks) {
+    var oldestTask = allTasks.where((task) => !task.isDone).reduce((value, element) => value.createdDate.isBefore(element.createdDate) ? value : element);
+    oldestTask.rank = oldestTask.rank + 1;
+    updateTask(oldestTask);
   }
 
 }

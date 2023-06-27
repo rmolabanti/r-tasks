@@ -27,9 +27,17 @@ class TaskItem extends StatelessWidget {
         task.name,
         style: _getTextStyle(context),
       ),
-      subtitle: Text(
-        task.tags.join(', '),
-        style: _getTextStyle(context),
+      subtitle: Row(
+        children: [
+          Text(task.formatedDate()),
+          const SizedBox(width: 3),
+          const Text('|'),
+          const SizedBox(width: 3),
+          Text(
+            task.tags.join(', '),
+            style: _getTextStyle(context),
+          ),
+        ],
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

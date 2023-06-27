@@ -34,11 +34,13 @@ class FocusTaskItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.timer),
+            icon: const Icon(Icons.repeat_one),
             iconSize: 25,
-            color: task.isDone ? Theme.of(context).disabledColor : Colors.green,
+            color: task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColor,
             onPressed: () {
-
+              task.isDone=true;
+              task.isRepeating=!task.isRepeating;
+              onTaskChanged(task);
             },
           ),
           IconButton(
