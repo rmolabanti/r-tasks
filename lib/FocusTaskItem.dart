@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:r_tasks/task.dart';
+
+import 'TasksController.dart';
 
 class FocusTaskItem extends StatelessWidget {
   final Task task;
   final void Function(Task) onTaskChanged;
+  final TasksController tasksController = Get.find();
 
   FocusTaskItem({required this.task, required this.onTaskChanged})
       : super(key: ObjectKey(task));
@@ -16,6 +20,10 @@ class FocusTaskItem extends StatelessWidget {
       onTap: () {
         task.isDone=!task.isDone;
         onTaskChanged(task);
+        if(task.isRepeating && task.isDone){
+          var newTask = task.copyWith(rank: 0);
+          tasksController.handleNewTask(newTask);
+        }
       },
       leading: CircleAvatar(
         backgroundColor:
@@ -39,8 +47,8 @@ class FocusTaskItem extends StatelessWidget {
             color: task.isDone ? Theme.of(context).primaryColorLight : Theme.of(context).primaryColor,
             onPressed: () {
               task.isDone=true;
-              task.isRepeating=!task.isRepeating;
               onTaskChanged(task);
+              tasksController.handleNewTask(task.copyWith());
             },
           ),
           IconButton(

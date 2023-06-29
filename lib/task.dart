@@ -44,7 +44,6 @@ class Task {
     task.isRepeating=isRepeating??this.isRepeating;
     task.rank=rank??this.rank;
     task.tags=tags;
-    task.createdDate=createdDate;
     return task;
   }
 

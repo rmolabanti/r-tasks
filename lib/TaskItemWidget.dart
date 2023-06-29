@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:r_tasks/task.dart';
 
+import 'TasksController.dart';
 import 'add_task_form.dart';
 
 class TaskItem extends StatelessWidget {
+  final TasksController tasksController = Get.find();
+
   TaskItem({required this.task, required this.onTaskChanged})
       : super(key: ObjectKey(task));
 
@@ -17,6 +21,10 @@ class TaskItem extends StatelessWidget {
       onTap: () {
         task.isDone=!task.isDone;
         onTaskChanged(task);
+        if(task.isRepeating && task.isDone){
+          var newTask = task.copyWith(rank: 0);
+          tasksController.handleNewTask(newTask);
+        }
       },
       leading: CircleAvatar(
         backgroundColor:

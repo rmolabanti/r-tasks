@@ -115,10 +115,6 @@ class TasksController extends GetxController{
     if(focusTasks.contains(task)){
       focusTasks.add(task);
     }
-    if(task.isRepeating && task.isDone){
-      var newTask = task.copyWith(rank: task.rank);
-      handleNewTask(newTask);
-    }
   }
 
   Task newTask() {
