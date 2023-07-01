@@ -89,6 +89,7 @@ class TasksController extends GetxController{
     log('Refresh focus tasks');
     
     increaseRankOfOldestTask(allTasks);
+    increaseRankOfDueDateTasks(allTasks);
     
     List<Task> openTasks = allTasks.where((task) => !task.isDone).toList();
     openTasks.sort((a, b) => b.rank.compareTo(a.rank));
@@ -153,4 +154,16 @@ class TasksController extends GetxController{
     updateTask(oldestTask);
   }
 
+  void increaseRankOfDueDateTasks(List<Task> allTasks) {
+    DateTime next7Days = DateTime.now().add(const Duration(days: 7));
+    allTasks
+        .where((task) =>
+            !task.isDone &&
+            task.dueDate != null &&
+            task.dueDate!.isBefore(next7Days))
+        .forEach((element) {
+      element.rank = element.rank + 1;
+      updateTask(element);
+    });
+  }
 }

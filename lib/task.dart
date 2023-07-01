@@ -9,6 +9,7 @@ class Task {
   List<String> tags=[];
   bool isRepeating=false;
   DateTime createdDate;
+  DateTime? dueDate;
 
   Task({required this.uid,required this.name}):createdDate=DateTime.now();
 
@@ -21,6 +22,7 @@ class Task {
       'tags':tags,
       'isRepeating':isRepeating,
       'createdDate':createdDate.millisecondsSinceEpoch,
+      'dueDate':dueDate?.millisecondsSinceEpoch
     };
   }
 
@@ -31,11 +33,8 @@ class Task {
     task.rank =map['rank']??0;
     task.isRepeating =map['isRepeating']??false;
     task.createdDate =DateTime.fromMillisecondsSinceEpoch(map['createdDate']??DateTime.now().millisecondsSinceEpoch);
-    if(map['tags']!=null){
-      task.tags =map['tags'].cast<String>();
-    }else{
-      task.tags =[];
-    }
+    task.dueDate =map['dueDate']!=null?DateTime.fromMillisecondsSinceEpoch(map['dueDate']):null;
+    task.tags =map['tags']!=null?map['tags'].cast<String>():[];
     return task;
   }
 
@@ -44,6 +43,7 @@ class Task {
     task.isRepeating=isRepeating??this.isRepeating;
     task.rank=rank??this.rank;
     task.tags=tags;
+    task.dueDate=dueDate;
     return task;
   }
 
